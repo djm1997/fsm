@@ -143,7 +143,7 @@ if (typeof btoa == 'undefined') {
 
 	</script>
 </head><body>
-	<h1>Graph / Finite State Machine Designer</h1>
+	<h1>Finite State Machine Designer and Tester</h1>
     <div class="center">
     	<input type="checkbox" id="directed" checked> Directed Edges? 
     	<br/>
@@ -153,6 +153,12 @@ if (typeof btoa == 'undefined') {
 	<canvas id="canvas" width="800" height="600">
 		<span class="error">Your browser does not support<br>the HTML5 &lt;canvas&gt; element</span>
 	</canvas>
+    <div><center>
+        <p>Type in a string and press the button to see if it is accepted by the finite state machine.<br>Note: it will output a meaningless result if your state machine is invalid.</p>
+        <input id="teststring" size="100%" type="text" name="String" value="Input a string here to test." onchange="saveBackup()"><br>
+        <input onclick="runDFA()" type="submit" value="Run DFA"><!--<input onclick="runNFA()" id="runNFA" type="submit" value="Run NFA">-->
+        <p id="result"></p>
+    </center></div>
 	<div>
 		<p class="center">Export as: <a href="javascript:saveAsPNG()">PNG</a> | <a href="javascript:saveAsSVG()">SVG</a> | <a href="javascript:saveAsLaTeX()">LaTeX</a></p>
 		<textarea id="output"></textarea>
@@ -164,6 +170,7 @@ if (typeof btoa == 'undefined') {
 			<li><b>Delete something:</b> click it and press the delete key (not the backspace key)</li>
 		</ul><ul>
 			<li><b>Make accept state:</b> double-click on an existing state</li>
+            <li><b>Make start state:</b> right-click on an existing state</li>
 			<li><b>Type numeric subscript:</b> put an underscore before the number (like "S_0")</li>
 			<li><b>Type greek letter:</b> put a backslash before it (like "\beta")</li>
 		</ul>
@@ -171,5 +178,6 @@ if (typeof btoa == 'undefined') {
 	</div>
 		<p>Based on the FSM machine <a href="http://madebyevan.com/fsm/">here</a>.
 	<p>Original by <a href="http://madebyevan.com/">Evan Wallace</a> in 2010</p>
-	<p> Update by <a href="http://samuelgreen.org/">Samuel Green</a> in 2015</p>
+	<p> Updated by <a href="http://samuelgreen.org/">Samuel Green</a> in 2015</p>
+    <p> Updated by David Miller in 2016 </p>
 </body></html>

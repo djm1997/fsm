@@ -62,6 +62,11 @@ Link.prototype.setAnchorPoint = function(x, y) {
 	}
 };
 
+Link.prototype.addToNode = function() {
+	// Add the transitions to the nodes
+	this.nodeA.transitions.push({text: this.text, node: this.nodeB });
+};
+
 Link.prototype.getEndPointsAndCircle = function() {
 	if(this.perpendicularPart == 0) {
 		var midX = (this.nodeA.x + this.nodeB.x) / 2;
@@ -103,6 +108,7 @@ Link.prototype.getEndPointsAndCircle = function() {
 };
 
 Link.prototype.draw = function(c) {
+
 	var stuff = this.getEndPointsAndCircle();
 	// draw arc
 	c.beginPath();
@@ -185,6 +191,8 @@ function Node(x, y) {
 	this.mouseOffsetY = 0;
 	this.isAcceptState = false;
 	this.text = '';
+
+	this.transitions = []
 }
 
 Node.prototype.setMouseStart = function(x, y) {
@@ -201,6 +209,12 @@ Node.prototype.draw = function(c) {
 	// draw the circle
 	c.beginPath();
 	c.arc(this.x, this.y, nodeRadius, 0, 2 * Math.PI, false);
+	if (this == nodes[0]) {
+		c.moveTo(this.x-nodeRadius, this.y);
+		c.lineTo(this.x-nodeRadius-15, this.y-10);
+		c.moveTo(this.x-nodeRadius, this.y);
+		c.lineTo(this.x-nodeRadius-15, this.y+10);
+	}
 	c.stroke();
 
 	// draw the text
@@ -228,6 +242,79 @@ Node.prototype.containsPoint = function(x, y) {
 	return (x - this.x)*(x - this.x) + (y - this.y)*(y - this.y) < nodeRadius*nodeRadius;
 };
 
+Node.prototype.defCheck = function(word) {
+	if (word.length < 1) {
+		return this.isAcceptState;
+	}
+	var first = word.charAt(0);
+	var rest = word.substring(1);
+	for (i = 0; i < this.transitions.length; i++) { 
+	    if (this.transitions[i].text.includes(first))
+	    {
+	    	return (this.transitions[i].node.defCheck(rest));
+	    }
+	}	
+	return false;	
+};
+
+Node.prototype.nonDefCheck = function(word) {
+	var nNodes = [];
+
+	/*
+	// Have a result of going down the epsilon path and going down the regular one
+	var epsRslt = false;
+	var Rslt = false;
+
+	// Find the regular result like before
+	if (word.length < 1)
+	{
+		return this.isAcceptState;
+	}
+	var first = word.charAt(0);
+	var rest = word.substring(1);
+	for (i = 0; i < this.transitions.length; i++)
+	{
+		if (this.transitions[i].text.includes(first))
+	    {
+	    	Rslt = (Rslt | (this.transitions[i].node.nonDefCheck(rest)));
+	    }
+	}
+	
+	// Find the epsilon result
+	for (i = 0; i < this.transitions.length; i++)
+	{
+		if (this.transitions[i].text.includes("\\epsilon"))
+		{
+			epsRslt = (epsRslt | this.transitions[i].node.nonDefCheck(word));
+		}
+	}
+
+	// If either of the results works then it passes
+	return (epsRslt || Rslt);
+	*/
+};
+
+function runDFA() {
+	var word = document.getElementById("teststring").value;
+	var result = nodes[0].defCheck(word);
+	if (result)
+	{
+		document.getElementById("result").innerHTML = "The string "+word+" was accepted by the DFA."
+		document.getElementById("result").style.color = "green"
+	}
+	else
+	{
+		document.getElementById("result").innerHTML = "The string "+word+" was not accepted by the DFA."
+		document.getElementById("result").style.color = "red"
+	}
+};
+
+function runNFA() {
+	var word = document.getElementById("teststring").value;
+	var result = nodes[0].nonDefCheck(word);
+	alert(result.toString());
+};
+
 function SelfLink(node, mouse, directed) {
 	this.node = node;
 	this.anchorAngle = 0;
@@ -239,7 +326,11 @@ function SelfLink(node, mouse, directed) {
 	if(mouse) {
 		this.setAnchorPoint(mouse.x, mouse.y);
 	}
-}
+};
+
+SelfLink.prototype.addToNode = function() {
+	this.node.transitions.push({text: this.text, node: this.node});
+};
 
 SelfLink.prototype.setMouseStart = function(x, y) {
 	this.mouseOffsetAngle = this.anchorAngle - Math.atan2(y - this.node.y, x - this.node.x);
@@ -608,6 +699,11 @@ function convertLatexShortcuts(text) {
 		text = text.replace(new RegExp('\\\\' + name.toLowerCase(), 'g'), String.fromCharCode(945 + i + (i > 16)));
 	}
 
+	text = text.replace("\\rightarrow", "→");
+	text = text.replace("\\leftarrow", "←");
+	text = text.replace("\\Rightarrow","⇒");
+	text = text.replace("\\Leftarrow","⇐");
+
 	// subscripts
 	for(var i = 0; i < 10; i++) {
 		text = text.replace(new RegExp('_' + i, 'g'), String.fromCharCode(8320 + i));
@@ -728,6 +824,9 @@ function drawUsing(c) {
 
 function draw() {
 	drawUsing(canvas.getContext('2d'));
+	for (var i = 0; i < links.length; i++) {
+		links[i].addToNode();
+	}
 	saveBackup();
 }
 
@@ -818,6 +917,20 @@ window.onload = function() {
 			draw();
 		}
 	};
+
+	canvas.oncontextmenu = function(e) {
+		var mouse = crossBrowserRelativeMousePos(e);
+		selectedObject = selectObject(mouse.x, mouse.y);
+
+		if(selectedObject instanceof Node) {
+			var curIndex = nodes.indexOf(selectedObject);
+			var temp = nodes[0];
+			nodes[0] = selectedObject;
+			nodes[curIndex] = temp;
+			draw();
+		}
+		return false;
+	}
 
 	canvas.onmousemove = function(e) {
 		var mouse = crossBrowserRelativeMousePos(e);
@@ -1033,6 +1146,12 @@ function restoreBackup() {
 	try {
 		var backup = JSON.parse(localStorage['fsm']);
 
+		if (typeof backup.string == 'undefined')
+		{
+			backup.string = "Input a string here to test."
+		}
+		document.getElementById('teststring').value = backup.string;
+
 		for(var i = 0; i < backup.nodes.length; i++) {
 			var backupNode = backup.nodes[i];
 			var node = new Node(backupNode.x, backupNode.y);
@@ -1121,6 +1240,8 @@ function saveBackup() {
 			backup.links.push(backupLink);
 		}
 	}
+
+	backup.string = document.getElementById("teststring").value;
 
 	localStorage['fsm'] = JSON.stringify(backup);
 }

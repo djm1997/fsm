@@ -1,3 +1,13 @@
+function generateUUID() {
+    var d = new Date().getTime();
+    var uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        var r = (d + Math.random()*16)%16 | 0;
+        d = Math.floor(d/16);
+        return (c=='x' ? r : (r&0x3|0x8)).toString(16);
+    });
+    return uuid;
+};
+
 function Node(x, y) {
 	this.x = x;
 	this.y = y;
@@ -5,6 +15,26 @@ function Node(x, y) {
 	this.mouseOffsetY = 0;
 	this.isAcceptState = false;
 	this.text = '';
+
+	this.id = guid()
+	this.transitions = {}
+}
+
+Node.prototype.check = function(word, is_det) {
+	if (word.length < 1) {
+		return this.isAcceptState
+	}
+	else
+	{
+		if (is_det || !("\\epsilon" in this.transitions))
+		{
+			return this.transitions[word.charAt(0)].check(word.substring(1), is_det)
+		}
+		else
+		{
+			return ((this.transitions[word.charAt(0)].check(word.substring(1), is_det))||(this.transitions["\\epsilon"].check(word, is_det)))
+		}
+	}
 }
 
 Node.prototype.setMouseStart = function(x, y) {
