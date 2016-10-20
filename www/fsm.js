@@ -209,7 +209,7 @@ Node.prototype.draw = function(c) {
 	// draw the circle
 	c.beginPath();
 	c.arc(this.x, this.y, nodeRadius, 0, 2 * Math.PI, false);
-	if (this == nodes[0]) {
+	if ((this == nodes[0]) && (document.getElementById("startstate").checked)) {
 		c.moveTo(this.x-nodeRadius, this.y);
 		c.lineTo(this.x-nodeRadius-15, this.y-10);
 		c.moveTo(this.x-nodeRadius, this.y);
@@ -258,7 +258,15 @@ Node.prototype.defCheck = function(word) {
 };
 
 Node.prototype.nonDefCheck = function(word) {
-	var nNodes = [];
+	var nNodes = {};
+
+	// Copy all the old nodes into the new ones
+	for (var i = 0; i < nodes.length; i++)
+	{
+		nNodes[i.toString()] = nodes[i]
+	}
+
+
 
 	/*
 	// Have a result of going down the epsilon path and going down the regular one
@@ -821,6 +829,15 @@ function drawUsing(c) {
 
 	c.restore();
 }
+
+/*
+document.getElementById("startstate").onclick = function() {
+	if (typeof nodes[0] != 'undefined')
+    { 
+    	nodes[0].draw(); 
+    }
+}
+*/
 
 function draw() {
 	drawUsing(canvas.getContext('2d'));
